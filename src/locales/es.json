@@ -1,0 +1,48 @@
+{
+  "app": {
+    "title": "Compite en Cuestionarios de Conocimiento",
+    "poweredBy": "🔥 Desafíos inteligentes. Compite, aprende y lidera.",
+    "chooseCategories": "Elige tus categorías favoritas",
+    "loading": "Cargando...",
+    "logout": "Cerrar sesión",
+    "connectedAs": "Conectado como"
+  },
+  "landing": {
+    "intro": "Participa en competencias de conocimiento donde enfrentarás desafíos en diversas categorías. ¡Demuestra tu habilidad y escala posiciones en el ranking!",
+    "features": {
+      "0": "Cuestionarios en vivo con fecha de inicio y fin",
+      "1": "Puntajes, rankings y competencia entre usuarios",
+      "2": "Variedad de temáticas desafiantes",
+      "3": "Premios y reconocimientos digitales"
+    },
+    "description": "Selecciona las categorías en las que deseas competir. Al registrarte, podrás unirte a competencias activas, responder cuestionarios y mejorar tu posición en el ranking.",
+    "subscriptionAccess": "Requiere registro para competir"
+  },
+  "buttons": {
+    "startNow": "Comenzar ahora",
+    "access": "Acceso usuarios"
+  },
+  "authForm": {
+    "titleLogin": "Iniciar Sesión",
+    "titleRegister": "Crear Cuenta",
+    "phoneLabel": "Teléfono Internacional",
+    "phoneExample": "Ej: +549112345678",
+    "passwordLabel": "Contraseña",
+    "loginButton": "Iniciar sesión",
+    "registerButton": "Crear cuenta",
+    "processing": "Procesando...",
+    "noAccount": "¿No tienes cuenta?",
+    "registerLink": "Regístrate",
+    "haveAccount": "¿Ya tienes cuenta?",
+    "loginLink": "Inicia sesión",
+    "errors": {
+      "invalidPhone": "Formato inválido. Ejemplo: +549112345678",
+      "shortPassword": "La contraseña debe tener al menos 8 caracteres"
+    }
+  },
+  "errors": {
+  "invalidEmail": "Correo electrónico inválido",
+  "shortPassword": "La contraseña debe tener al menos 8 caracteres",
+  "shortUsername": "El nombre de usuario debe tener al menos 3 caracteres"
+}
+}
