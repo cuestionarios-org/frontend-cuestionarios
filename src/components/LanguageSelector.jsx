@@ -23,7 +23,7 @@ export default function LanguageSelector() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 px-3 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-sm"
+        className="text-gray-800 dark:text-gray-200 flex items-center gap-1 px-3 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-sm"
       >
         <span>
         {languages[currentLang]?.flag 
@@ -33,9 +33,9 @@ export default function LanguageSelector() {
         }
         </span>
 
-        <span>{languages[currentLang]?.label || currentLang.toUpperCase()}</span>
+        <span className='text-gray-800 dark:text-gray-200'>{languages[currentLang]?.label || currentLang.toUpperCase()}</span>
         <svg
-          className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`w-6 h-6 transition-transform ${open ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -53,7 +53,7 @@ export default function LanguageSelector() {
               className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left hover:bg-gray-100 dark:hover:bg-gray-700"
             >
               <span>{<Flag code={flag} style={{ width: 20, height: 14 }} />}</span>
-              <span>{label}</span>
+              <span className='text-gray-800 dark:text-gray-200'>{label}</span>
             </button>
           ))}
         </div>

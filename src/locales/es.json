@@ -41,8 +41,46 @@
     }
   },
   "errors": {
-  "invalidEmail": "Correo electrónico inválido",
-  "shortPassword": "La contraseña debe tener al menos 8 caracteres",
-  "shortUsername": "El nombre de usuario debe tener al menos 3 caracteres"
-}
+    "invalidEmail": "Correo electrónico inválido",
+    "shortPassword": "La contraseña debe tener al menos 8 caracteres",
+    "shortUsername": "El nombre de usuario debe tener al menos 3 caracteres",
+    "loadCompetitions": "Error al cargar las competencias"
+  },
+  "competitionsOLD": {
+    "title": "Mis Competencias",
+    "tabs": {
+      "pending": "Disponibles",
+      "active": "En curso",
+      "finished": "Completadas"
+    },
+    "empty": "No hay competencias en esta sección.",
+    "subscribed": "Ya estás inscrito. Comienza en {days} días{hours}.",
+    "buttons": {
+      "subscribe": "Inscribirme",
+      "goToCompetition": "Ir a la Competencia",
+      "viewRanking": "Ver Ranking"
+    },
+    "messages": {
+      "subscriptionSuccess": "Inscripción exitosa",
+      "subscriptionError": "Error al inscribirse"
+    },
+    "status": {
+      "finished": "Finalizada",
+      "registered": "Inscrito"
+    }
+  },
+  "competitions": {
+    "my_competitions": "Mis Competencias",
+    "tab_pending": "Disponibles",
+    "tab_active": "En curso",
+    "tab_finished": "Completadas",
+    "no_competitions": "No hay competencias en esta sección.",
+    "subscribe": "Inscribirme",
+    "success_subscribe": "Inscripción exitosa",
+    "error_subscribe": "Error al inscribirse",
+    "error_loading": "Error al cargar competencias",
+    "already_registered": "Ya estás inscrito. Comienza en {{days}} días{{#hours}} y {{hours}} horas{{/hours}}.",
+    "go_to_competition": "Ir a la Competencia",
+    "view_ranking": "Ver Ranking"
+  }
 }

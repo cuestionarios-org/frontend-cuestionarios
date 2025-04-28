@@ -42,6 +42,9 @@ export const competitionService = {
    * Trae las competencias del usuario: pending, active, finished
    */
   getUserCompetitions: () => apiClient.get('/competitions/users'),
+  inscribeUser(competitionId) {
+    return apiClient.post(`/competitions/${competitionId}/participants`)
+  }
 }
 
 export default apiClient
