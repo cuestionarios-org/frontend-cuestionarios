@@ -47,4 +47,14 @@ export const competitionService = {
   }
 }
 
+export const questionService = {
+  getAll: () => apiClient.get('/questions'),
+  getById: (id) => apiClient.get(`/questions/${id}`),
+  create: (data) => apiClient.post('/questions', data),
+  update: (id, data) => apiClient.put(`/questions/${id}`, data),
+  getCategories: () => apiClient.get('/questions/categories'),
+  createCategory: (data) => apiClient.post('/questions/categories', data),
+  getByCategory: (id) => apiClient.get(`/questions/category/${id}`)
+}
+
 export default apiClient
