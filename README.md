@@ -1,12 +1,70 @@
-# React + Vite
+# 🧠 Cuestionarios - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación React para gestionar competencias y cuestionarios de conocimiento, con soporte multilenguaje y autenticación.
 
-Currently, two official plugins are available:
+## 🚀 Tecnologías principales
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- [React](https://react.dev/)
+- [Vite](https://vitejs.dev/)
+- [TailwindCSS](https://tailwindcss.com/)
+- [React Router](https://reactrouter.com/)
+- [i18next](https://www.i18next.com/) (internacionalización)
+- [Axios](https://axios-http.com/)
+- [react-hot-toast](https://react-hot-toast.com/) (notificaciones)
 
-## Expanding the ESLint configuration
+## ⚡ Instalación rápida
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. **Clona el repositorio:**
+   ```sh
+   git clone https://github.com/tu-usuario/frontend-cuestionarios.git
+   cd frontend-cuestionarios
+   ```
+
+2. **Instala las dependencias:**
+   ```sh
+   npm install
+   ```
+
+3. **Configura las variables de entorno:**
+   - Crea un archivo `.env` en la raíz con la URL de la API:
+     ```
+     VITE_API_URL=http://localhost:3000
+     ```
+
+4. **Inicia el servidor de desarrollo:**
+   ```sh
+   npm run dev
+   ```
+   El proyecto estará disponible en [http://localhost:5173](http://localhost:5173)
+
+## 📝 Scripts útiles
+
+- `npm run dev` — Levanta el entorno de desarrollo con recarga en caliente.
+- `npm run build` — Genera la versión optimizada para producción.
+- `npm run preview` — Previsualiza el build de producción.
+- `npm run lint` — Ejecuta ESLint para revisar el código.
+
+## 🌐 Internacionalización
+
+El proyecto soporta Español, Inglés y Portugués. Puedes cambiar el idioma desde el menú superior.
+
+## 🛠️ Estructura principal
+
+- `src/components/` — Componentes reutilizables (Navbar, Loader, etc)
+- `src/pages/` — Vistas principales (Landing, Competencias, etc)
+- `src/context/` — Contextos globales (Auth, Tema)
+- `src/services/` — Servicios para llamadas a API
+- `src/locales/` — Archivos de traducción
+
+## 📦 Requisitos
+
+- Node.js >= 18
+- npm >= 9
+
+## 📄 Licencia
+
+MIT
+
+---
+
+> Si tienes dudas o sugerencias, ¡no dudes en abrir un issue

@@ -8,6 +8,7 @@ import AuthForm from './pages/AuthForm'
 import ProtectedRoute from './components/ProtectedRoute'
 import QuizzesManager from './pages/QuizzesManager'
 import CompetitionsPage from './pages/CompetitionsPage'
+import AdminPage from './pages/AdminPage'
 
 export default function App() {
   const { user, pending } = useAuth()
@@ -42,6 +43,15 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <CompetitionsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                {user?.role === 'admin' ? <AdminPage /> : <Navigate to="/" />}
               </ProtectedRoute>
             }
           />

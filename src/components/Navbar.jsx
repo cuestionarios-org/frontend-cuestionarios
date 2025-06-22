@@ -66,7 +66,19 @@ export default function Navbar() {
                   <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 ring-1 ring-black dark:ring-gray-600 ring-opacity-5">
                     <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 border-b dark:border-gray-700">
                       {t('app.connectedAs')}: <span className="font-medium">{user.username}</span>
+                      {user.role === 'admin' && (
+                        <span className="ml-2 px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-xs">admin</span>
+                      )}
                     </div>
+                    {user.role === 'admin' && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="w-full block text-left px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        Administrar
+                      </Link>
+                    )}
                     <button
                       onClick={() => { logout(); setIsMenuOpen(false) }}
                       className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
