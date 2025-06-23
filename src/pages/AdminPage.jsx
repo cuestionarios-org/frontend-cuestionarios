@@ -6,6 +6,7 @@ import ErrorMessage from '../components/ErrorMessage'
 import QuestionsFilters from '../components/QuestionsFilters'
 import QuestionCard from '../components/QuestionCard'
 import QuestionForm from '../components/QuestionForm'
+import QuestionsSearch from '../components/QuestionsSearch'
 import { questionService } from '../services/api'
 
 const tabs = [
@@ -30,10 +31,11 @@ export default function AdminPage() {
   const [editingId, setEditingId] = useState(null)
   const [filterCategory, setFilterCategory] = useState('')
   const [filterState, setFilterState] = useState('')
+  const [searchText, setSearchText] = useState('')
   const formRef = useRef(null)
 
   const categories = useCategories()
-  const { questions, setQuestions, loading, error } = useQuestions(tab, filterCategory, filterState)
+  const { questions, setQuestions, loading, error } = useQuestions(tab, filterCategory, filterState, searchText)
 
   // Handlers
   const handleFormChange = (e) => {
@@ -110,16 +112,19 @@ export default function AdminPage() {
       )
     } else {
       const res = await questionService.create(form)
-      setQuestions(qs => {
-        const updated = [...qs, {
+      // Limpiar filtros después de agregar
+      setFilterCategory('')
+      setFilterState('')
+      setQuestions(qs => [
+        ...qs,
+        {
           ...res.data,
           question: {
             ...res.data.question,
             category_id: Number(res.data.question.category_id)
           }
-        }]
-        return updated.sort((a, b) => a.question.id - b.question.id)
-      })
+        }
+      ])
     }
     setShowForm(false)
     setEditingId(null)
@@ -189,6 +194,7 @@ export default function AdminPage() {
               filterState={filterState}
               setFilterState={setFilterState}
             />
+            <QuestionsSearch value={searchText} onChange={setSearchText} />
             {showForm && (
               <QuestionForm
                 form={form}
@@ -204,18 +210,29 @@ export default function AdminPage() {
             {error && <ErrorMessage message={error} />}
             {!loading && !error && (
               <ul className="space-y-4">
-                {questions.length === 0 ? (
+                {questions
+                  .filter(q =>
+                    q.question.text
+                      .toLowerCase()
+                      .includes(searchText.toLowerCase())
+                  ).length === 0 ? (
                   <li className="text-gray-500">No hay preguntas registradas.</li>
                 ) : (
-                  questions.map(q => (
-                    <QuestionCard
-                      key={q.question.id}
-                      q={q}
-                      categories={categories}
-                      onEdit={handleEdit}
-                      onChangeStatus={handleChangeStatus}
-                    />
-                  ))
+                  questions
+                    .filter(q =>
+                      q.question.text
+                        .toLowerCase()
+                        .includes(searchText.toLowerCase())
+                    )
+                    .map(q => (
+                      <QuestionCard
+                        key={q.question.id}
+                        q={q}
+                        categories={categories}
+                        onEdit={handleEdit}
+                        onChangeStatus={handleChangeStatus}
+                      />
+                    ))
                 )}
               </ul>
             )}
