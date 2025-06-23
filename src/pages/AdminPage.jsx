@@ -27,28 +27,36 @@ export default function AdminPage() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(initialForm)
   const [editingId, setEditingId] = useState(null)
+  const [filterCategory, setFilterCategory] = useState('')
+  const [filterState, setFilterState] = useState('')
   const formRef = useRef(null)
 
   useEffect(() => {
     if (tab === 'questions') {
       setLoading(true)
       setError(null)
-      questionService.getAll()
-        .then(res => setQuestions(res.data))
+      const params = {}
+      if (filterCategory) params.category_id = filterCategory
+      if (filterState) params.state = filterState
+      questionService.getAll(params)
+        .then(res => {
+          const sorted = [...res.data].sort((a, b) => a.question.id - b.question.id)
+          setQuestions(sorted)
+        })
         .catch(err => setError('Error al cargar preguntas'))
         .finally(() => setLoading(false))
     }
-  }, [tab])
+  }, [tab, filterCategory, filterState])
 
   // Cargar categorías
   useEffect(() => {
     questionService.getCategories().then(res => setCategories(res.data))
   }, [])
 
-  // Cuando se muestra el formulario, hacer scroll y foco
+  // Cuando se muestra el formulario, hacer scroll y foco en el modal
   useEffect(() => {
     if (showForm && formRef.current) {
-      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      formRef.current.focus()
       const firstInput = formRef.current.querySelector('input,select,textarea')
       if (firstInput) firstInput.focus()
     }
@@ -56,14 +64,25 @@ export default function AdminPage() {
 
   // Handlers para el formulario
   const handleFormChange = (e) => {
-    const { name, value } = e.target
+    const { name, value, type, checked } = e.target
     if (name.startsWith('answer')) {
       const [_, idx, field] = name.split('-')
       setForm(f => ({
         ...f,
-        answers: f.answers.map((a, i) =>
-          i === Number(idx) ? { ...a, [field]: field === 'is_correct' ? e.target.checked : value } : a
-        )
+        answers: f.answers.map((a, i) => {
+          if (i === Number(idx)) {
+            // Si es el campo is_correct, solo uno puede ser true
+            if (field === 'is_correct' && checked) {
+              return { ...a, is_correct: true }
+            }
+            return { ...a, [field]: field === 'is_correct' ? checked : value }
+          }
+          // Si es is_correct y se está marcando, desmarcar los demás
+          if (field === 'is_correct' && checked) {
+            return { ...a, is_correct: false }
+          }
+          return a
+        })
       }))
     } else {
       setForm(f => ({
@@ -77,7 +96,12 @@ export default function AdminPage() {
     setEditingId(q.question.id)
     setForm({
       question: { ...q.question },
-      answers: q.answers.map(a => ({ text: a.text, is_correct: a.is_correct }))
+      // Mantén el id de cada respuesta
+      answers: q.answers.map(a => ({
+        id: a.id, // <-- importante
+        text: a.text,
+        is_correct: a.is_correct
+      }))
     })
     setShowForm(true)
   }
@@ -93,15 +117,62 @@ export default function AdminPage() {
     e.preventDefault()
     if (editingId) {
       await questionService.update(editingId, form)
+      setQuestions(qs =>
+        qs.map(q =>
+          q.question.id === editingId
+            ? { ...q, question: { ...q.question, ...form.question }, answers: form.answers }
+            : q
+        )
+      )
     } else {
-      await questionService.create(form)
+      const res = await questionService.create(form)
+      setQuestions(qs => {
+        const updated = [...qs, res.data]
+        // Ordena por id ascendente
+        return updated.sort((a, b) => a.question.id - b.question.id)
+      })
     }
     setShowForm(false)
     setEditingId(null)
     setForm(initialForm)
-    // Recarga preguntas
-    const res = await questionService.getAll()
-    setQuestions(res.data)
+  }
+
+  const handleOpenForm = () => {
+    setShowForm(true)
+    setEditingId(null)
+    setForm(initialForm)
+  }
+
+  const handleCloseForm = () => {
+    setShowForm(false)
+    setEditingId(null)
+    setForm(initialForm)
+  }
+
+  const handleChangeStatus = async (q) => {
+    let newStatus = q.question.state
+    if (q.question.state === 'published') newStatus = 'deleted'
+    else if (q.question.state === 'draft') newStatus = 'published'
+    else return
+
+    await questionService.update(q.question.id, {
+      question: {
+        text: q.question.text,
+        category_id: q.question.category_id,
+        state: newStatus
+      },
+      answers: q.answers.map(a => ({
+        text: a.text,
+        is_correct: a.is_correct
+      }))
+    })
+    setQuestions(qs =>
+      qs.map(qq =>
+        qq.question.id === q.question.id
+          ? { ...qq, question: { ...qq.question, state: newStatus } }
+          : qq
+      )
+    )
   }
 
   return (
@@ -130,90 +201,136 @@ export default function AdminPage() {
             <h2 className="text-xl font-semibold mb-4">Preguntas</h2>
             <button
               className="mb-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              onClick={() => { setShowForm(true); setEditingId(null); setForm(initialForm) }}
+              onClick={handleOpenForm}
             >
               + Agregar pregunta
             </button>
+            {/* Filtros */}
+            <div className="flex flex-wrap gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  Filtrar por categoría
+                </label>
+                <select
+                  className="p-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                  value={filterCategory}
+                  onChange={e => setFilterCategory(e.target.value)}
+                >
+                  <option value="">Todas</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  Filtrar por estado
+                </label>
+                <select
+                  className="p-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                  value={filterState}
+                  onChange={e => setFilterState(e.target.value)}
+                >
+                  <option value="">Todos</option>
+                  <option value="published">Publicado</option>
+                  <option value="draft">Borrador</option>
+                  <option value="deleted">Eliminado</option>
+                </select>
+              </div>
+            </div>
+            {/* Modal para agregar/editar pregunta */}
             {showForm && (
-              <form
-                ref={formRef}
-                onSubmit={handleSubmit}
-                className="mb-6 p-6 bg-white dark:bg-gray-800 rounded-lg shadow space-y-6 border border-gray-200 dark:border-gray-700"
-              >
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-                    Texto de la pregunta
-                  </label>
-                  <input
-                    className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    name="text"
-                    value={form.question.text}
-                    onChange={handleFormChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-                    Categoría
-                  </label>
-                  <select
-                    className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    name="category_id"
-                    value={form.question.category_id}
-                    onChange={handleFormChange}
-                    required
-                  >
-                    <option value="">Selecciona una categoría</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-                    Respuestas
-                  </label>
-                  <div className="space-y-2">
-                    {form.answers.map((a, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <input
-                          className="flex-1 p-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none"
-                          name={`answer-${idx}-text`}
-                          value={a.text}
-                          onChange={handleFormChange}
-                          placeholder={`Respuesta ${idx + 1}`}
-                          required
-                        />
-                        <label className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-200">
-                          <input
-                            type="checkbox"
-                            name={`answer-${idx}-is_correct`}
-                            checked={a.is_correct}
-                            onChange={handleFormChange}
-                            className="accent-blue-600"
-                          />
-                          Correcta
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex gap-2">
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-lg border border-gray-200 dark:border-gray-700 relative">
                   <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                  >
-                    {editingId ? 'Guardar cambios' : 'Agregar'}
-                  </button>
-                  <button
+                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 text-xl"
+                    onClick={handleCloseForm}
+                    aria-label="Cerrar"
                     type="button"
-                    className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 transition"
-                    onClick={() => { setShowForm(false); setEditingId(null); setForm(initialForm) }}
                   >
-                    Cancelar
+                    ×
                   </button>
+                  <form
+                    ref={formRef}
+                    onSubmit={handleSubmit}
+                    className="space-y-6"
+                  >
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+                        Texto de la pregunta
+                      </label>
+                      <input
+                        className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        name="text"
+                        value={form.question.text}
+                        onChange={handleFormChange}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+                        Categoría
+                      </label>
+                      <select
+                        className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        name="category_id"
+                        value={form.question.category_id}
+                        onChange={handleFormChange}
+                        required
+                      >
+                        <option value="">Selecciona una categoría</option>
+                        {categories.map(cat => (
+                          <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+                        Respuestas
+                      </label>
+                      <div className="space-y-2">
+                        {form.answers.map((a, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <input
+                              className="flex-1 p-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none"
+                              name={`answer-${idx}-text`}
+                              value={a.text}
+                              onChange={handleFormChange}
+                              placeholder={`Respuesta ${idx + 1}`}
+                              required
+                            />
+                            <label className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-200">
+                              <input
+                                type="checkbox"
+                                name={`answer-${idx}-is_correct`}
+                                checked={a.is_correct}
+                                onChange={handleFormChange}
+                                className="accent-blue-600"
+                              />
+                              Correcta
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                      >
+                        {editingId ? 'Guardar cambios' : 'Agregar'}
+                      </button>
+                      <button
+                        type="button"
+                        className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 transition"
+                        onClick={handleCloseForm}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </form>
                 </div>
-              </form>
+              </div>
             )}
             {loading && <Loader />}
             {error && <ErrorMessage message={error} />}
@@ -224,11 +341,25 @@ export default function AdminPage() {
                 ) : (
                   questions.map(q => (
                     <li key={q.question.id} className="relative p-4 bg-gray-100 dark:bg-gray-700 rounded shadow">
+                      {/* Badges en la esquina superior izquierda */}
+                      <div className="absolute top-2 left-3 flex gap-2">
+                        <span className="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 text-xs px-2 py-0.5 rounded">
+                          {categories.find(cat => cat.id === q.question.category_id)?.name || 'Sin categoría'}
+                        </span>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded
+            ${q.question.state === 'published' ? 'bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-200'
+              : q.question.state === 'draft' ? 'bg-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+              : 'bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
+                          {q.question.state}
+                        </span>
+                      </div>
                       {/* Badge con el ID en la esquina superior derecha */}
                       <span className="absolute top-2 right-3 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs font-bold px-2 py-0.5 rounded">
                         ID: {q.question.id}
                       </span>
-                      <div className="font-medium text-gray-800 dark:text-gray-100">{q.question.text}</div>
+                      {/* Espacio extra para los badges */}
+                      <div className="font-medium text-gray-800 dark:text-gray-100 mt-10">{q.question.text}</div>
+                      {/* Listado de respuestas */}
                       {q.answers && (
                         <ul className="mt-2 ml-4 list-disc text-gray-700 dark:text-gray-200">
                           {q.answers.map(a => (
@@ -238,7 +369,7 @@ export default function AdminPage() {
                           ))}
                         </ul>
                       )}
-                      {/* Botones debajo del contenido, alineados a la derecha */}
+                      {/* Botones de acción */}
                       <div className="flex gap-2 justify-end mt-4">
                         <button
                           className="text-xs px-2 py-1 bg-yellow-200 text-yellow-800 rounded hover:bg-yellow-300"
@@ -247,10 +378,18 @@ export default function AdminPage() {
                           Editar
                         </button>
                         <button
-                          className="text-xs px-2 py-1 bg-red-200 text-red-800 rounded hover:bg-red-300"
-                          onClick={() => handleDelete(q.question.id)}
+                          className={`text-xs px-2 py-1 rounded transition ${
+                            q.question.state === 'published'
+                              ? 'bg-red-200 text-red-800 hover:bg-red-300'
+                              : 'bg-green-200 text-green-800 hover:bg-green-300'
+                          }`}
+                          onClick={() => handleChangeStatus(q)}
                         >
-                          Eliminar
+                          {q.question.state === 'published'
+                            ? 'Marcar como eliminada'
+                            : q.question.state === 'draft'
+                            ? 'Publicar'
+                            : 'Eliminada'}
                         </button>
                       </div>
                     </li>
@@ -258,9 +397,9 @@ export default function AdminPage() {
                 )}
               </ul>
             )}
+            {tab === 'quizzes' && <div>Aquí irán los cuestionarios.</div>}
           </div>
         )}
-        {tab === 'quizzes' && <div>Aquí irán los cuestionarios.</div>}
         {tab === 'competitions' && <div>Aquí irán las competencias.</div>}
       </div>
     </div>

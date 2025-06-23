@@ -48,11 +48,10 @@ export const competitionService = {
 }
 
 export const questionService = {
-  getAll: () => apiClient.get('/questions'),
+  getAll: (params = {}) => apiClient.get('/questions', { params }),
   getById: (id) => apiClient.get(`/questions/${id}`),
   create: (data) => apiClient.post('/questions', data),
   update: (id, data) => apiClient.put(`/questions/${id}`, data),
-  delete: (id) => apiClient.delete(`/questions/${id}`), // <--- Agregado
   getCategories: () => apiClient.get('/questions/categories'),
   createCategory: (data) => apiClient.post('/questions/categories', data),
   getByCategory: (id) => apiClient.get(`/questions/category/${id}`)
