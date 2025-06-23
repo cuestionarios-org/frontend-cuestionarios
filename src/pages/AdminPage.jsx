@@ -42,22 +42,20 @@ export default function AdminPage() {
     const { name, value, type, checked } = e.target
     if (name.startsWith('answer')) {
       const [_, idx, field] = name.split('-')
-      setForm(f => ({
-        ...f,
-        answers: f.answers.map((a, i) => {
-          if (i === Number(idx)) {
-            if (field === 'is_correct' && checked) {
-              // Solo una respuesta puede ser correcta
-              return { ...a, is_correct: true }
-            }
-            return { ...a, [field]: field === 'is_correct' ? checked : value }
-          }
-          if (field === 'is_correct' && checked) {
-            return { ...a, is_correct: false }
-          }
-          return a
-        })
-      }))
+      setForm(f => {
+        const answers = [...f.answers]
+        // Asegura que el array tenga la longitud necesaria
+        while (answers.length <= Number(idx)) {
+          answers.push({ text: '', is_correct: false })
+        }
+        if (field === 'text') {
+          answers[idx].text = value
+        } else if (field === 'is_correct') {
+          // Solo una puede ser correcta
+          answers.forEach((a, i) => { a.is_correct = i === Number(idx) })
+        }
+        return { ...f, answers }
+      })
     } else {
       setForm(f => ({
         ...f,
@@ -93,8 +91,18 @@ export default function AdminPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    // Filtra respuestas vacías
+    const filteredAnswers = form.answers
+      .filter(a => a.text && a.text.trim() !== '')
+
+    // Crea el objeto form limpio
+    const cleanForm = {
+      ...form,
+      answers: filteredAnswers
+    }
+
     if (editingId) {
-      await questionService.update(editingId, form)
+      await questionService.update(editingId, cleanForm)
       setQuestions(qs =>
         qs.map(q =>
           q.question.id === editingId
@@ -102,17 +110,16 @@ export default function AdminPage() {
                 ...q,
                 question: {
                   ...q.question,
-                  ...form.question,
-                  category_id: Number(form.question.category_id)
+                  ...cleanForm.question,
+                  category_id: Number(cleanForm.question.category_id)
                 },
-                answers: form.answers
+                answers: cleanForm.answers
               }
             : q
         )
       )
     } else {
-      const res = await questionService.create(form)
-      // Limpiar filtros después de agregar
+      const res = await questionService.create(cleanForm)
       setFilterCategory('')
       setFilterState('')
       setQuestions(qs => [
