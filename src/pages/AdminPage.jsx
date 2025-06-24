@@ -17,11 +17,7 @@ const tabs = [
 
 const initialForm = {
   question: { text: '', category_id: '' },
-  answers: [
-    { text: '', is_correct: false },
-    { text: '', is_correct: false },
-    { text: '', is_correct: false }
-  ]
+  answers: Array(5).fill().map((_, i) => ({ text: '', is_correct: i === 0 }))
 }
 
 export default function AdminPage() {

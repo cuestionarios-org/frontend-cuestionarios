@@ -37,7 +37,7 @@ function SortableAnswer({answer, idx, onAnswerChange, removeAnswer, answers}) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-2 p-2 rounded transition ${isDragging ? 'shadow-lg' : ''}`}
+      className={`flex items-center gap-2 p-1 rounded transition ${isDragging ? 'shadow-lg' : ''}`}
       {...attributes}
     >
       {/* Drag handle */}
@@ -138,36 +138,24 @@ export default function QuestionForm({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-lg border border-gray-200 dark:border-gray-700 relative">
-        <button
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 text-xl"
-          onClick={handleCloseForm}
-          aria-label="Cerrar"
-          type="button"
-        >
-          ×
-        </button>
+      <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md sm:max-w-lg md:max-w-xl border border-gray-200 dark:border-gray-700 relative max-h-[90vh] overflow-y-auto">
+        {/* Botón de cierre eliminado */}
         <form
           ref={formRef}
           onSubmit={handleSubmit}
-          className="space-y-6"
+          className="space-y-4"
         >
           <div>
-            <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-              Texto de la pregunta
-            </label>
             <input
               className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
               name="text"
               value={form.question.text}
               onChange={handleFormChange}
               required
+              placeholder="Texto de la pregunta"
             />
           </div>
           <div>
-            <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-              Categoría
-            </label>
             <select
               className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
               name="category_id"
