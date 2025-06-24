@@ -164,13 +164,13 @@ export default function AdminPage() {
         is_correct: a.is_correct
       }))
     })
-    setQuestions(qs =>
-      qs.map(qq =>
-        qq.question.id === q.question.id
-          ? { ...qq, question: { ...qq.question, state: newStatus } }
-          : qq
-      )
-    )
+    // Volver a pedir el listado actualizado al backend
+    const res = await questionService.getAll({
+      category_id: filterCategory || undefined,
+      state: filterState || undefined,
+      text: searchText || undefined
+    })
+    setQuestions(res.data.sort((a, b) => b.question.id - a.question.id))
   }
 
   return (
