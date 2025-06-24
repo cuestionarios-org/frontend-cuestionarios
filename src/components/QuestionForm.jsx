@@ -89,7 +89,7 @@ export default function QuestionForm({
                     value={form.answers[idx]?.text || ''}
                     onChange={e => onAnswerChange(idx, 'text', e.target.value)}
                     placeholder={`Respuesta ${idx + 1}`}
-                    required={idx < 2}
+                    // required={idx < 2}
                   />
                   <label className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-200">
                     <input

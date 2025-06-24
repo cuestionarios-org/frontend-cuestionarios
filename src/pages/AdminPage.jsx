@@ -40,19 +40,35 @@ export default function AdminPage() {
   // Handlers
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target
+    if (name === 'answers') {
+      // Manejo especial para mover/eliminar respuestas
+      let newAnswers = value
+      // Asegura que la primera con texto sea la correcta
+      const firstFilled = newAnswers.findIndex(a => a.text && a.text.trim() !== '')
+      newAnswers = newAnswers.map((a, i) => ({
+        ...a,
+        is_correct: i === firstFilled
+      }))
+      setForm(f => ({
+        ...f,
+        answers: newAnswers
+      }))
+      return
+    }
     if (name.startsWith('answer')) {
       const [_, idx, field] = name.split('-')
       setForm(f => {
         const answers = [...f.answers]
-        // Asegura que el array tenga la longitud necesaria
         while (answers.length <= Number(idx)) {
           answers.push({ text: '', is_correct: false })
         }
         if (field === 'text') {
           answers[idx].text = value
-        } else if (field === 'is_correct') {
-          // Solo una puede ser correcta
-          answers.forEach((a, i) => { a.is_correct = i === Number(idx) })
+        }
+        // Solo reasigna la correcta si ninguna está marcada como correcta
+        if (!answers.some(a => a.is_correct && a.text && a.text.trim() !== '')) {
+          const firstFilled = answers.findIndex(a => a.text && a.text.trim() !== '')
+          answers.forEach((a, i) => { a.is_correct = i === firstFilled })
         }
         return { ...f, answers }
       })
@@ -119,19 +135,12 @@ export default function AdminPage() {
         )
       )
     } else {
-      const res = await questionService.create(cleanForm)
+      await questionService.create(cleanForm)
       setFilterCategory('')
       setFilterState('')
-      setQuestions(qs => [
-        ...qs,
-        {
-          ...res.data,
-          question: {
-            ...res.data.question,
-            category_id: Number(res.data.question.category_id)
-          }
-        }
-      ])
+      // Peticiona el listado actualizado al backend
+      const res = await questionService.getAll({})
+      setQuestions(res.data.sort((a, b) => b.question.id - a.question.id))
     }
     setShowForm(false)
     setEditingId(null)
