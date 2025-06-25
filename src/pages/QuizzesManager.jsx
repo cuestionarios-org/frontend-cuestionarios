@@ -108,7 +108,9 @@ export default function QuizzesManager() {
                   </td>
                   <td className="px-2 py-2 text-gray-900 dark:text-white">{quiz.title}</td>
                   <td className="px-2 py-2 max-w-[180px] truncate text-gray-900 dark:text-white" title={quiz.description}>{quiz.description || '-'}</td>
-                  <td className="px-2 py-2 text-gray-900 dark:text-white">{quiz.category?.name || '-'}</td>
+                  <td className="px-2 py-2 text-gray-900 dark:text-white">{
+                    categories.find(cat => cat.id === quiz.category_id)?.name || '-'
+                  }</td>
                   <td className="px-2 py-2 text-gray-900 dark:text-white">{quiz.questions?.length || 0}</td>
                   <td className="px-2 py-2 capitalize">
                     <span className={`px-2 py-1 rounded text-xs font-semibold 
