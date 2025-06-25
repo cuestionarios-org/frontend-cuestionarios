@@ -8,6 +8,7 @@ import QuestionCard from '../components/QuestionCard'
 import QuestionForm from '../components/QuestionForm'
 import QuestionsSearch from '../components/QuestionsSearch'
 import { questionService } from '../services/api'
+import QuizzesManager from './QuizzesManager'
 
 const tabs = [
   { key: 'questions', label: 'Preguntas y Respuestas' },
@@ -248,8 +249,10 @@ export default function AdminPage() {
                 )}
               </ul>
             )}
-            {tab === 'quizzes' && <div>Aquí irán los cuestionarios.</div>}
           </div>
+        )}
+        {tab === 'quizzes' && (
+          <QuizzesManager />
         )}
         {tab === 'competitions' && <div>Aquí irán las competencias.</div>}
       </div>

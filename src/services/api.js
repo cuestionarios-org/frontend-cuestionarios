@@ -54,7 +54,17 @@ export const questionService = {
   update: (id, data) => apiClient.put(`/questions/${id}`, data),
   getCategories: () => apiClient.get('/questions/categories'),
   createCategory: (data) => apiClient.post('/questions/categories', data),
-  getByCategory: (id) => apiClient.get(`/questions/category/${id}`)
+  getByCategory: (id) => apiClient.get(`/questions/category/${id}`),
+  // --- Quizzes ---
+  createQuiz: (data) => {
+    return apiClient.post('/quizzes', data)
+  },
+  updateQuiz: (id, data) => {
+    return apiClient.put(`/quizzes/${id}`, data)
+  },
+  getAllQuizzes: () => {
+    return apiClient.get('/quizzes')
+  }
 }
 
 export default apiClient
