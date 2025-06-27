@@ -18,8 +18,7 @@ export default function CompetitionCard({ competition, tab, userId, onSubscribe 
 
   return (
     <div
-      className="p-4 border border-gray-200 dark:border-gray-600
-                 rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700"
+      className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700"
     >
       <h2 className="text-xl font-medium text-gray-800 dark:text-gray-100">
         {competition.title}
@@ -27,18 +26,18 @@ export default function CompetitionCard({ competition, tab, userId, onSubscribe 
       <p className="text-sm text-gray-600 dark:text-gray-300">
         {startDate.toLocaleDateString()} – {endDate.toLocaleDateString()}
       </p>
-
       <div className="mt-3">
         {tab === 'pending' && (
           isRegistered ? (
-            <p className="text-sm text-gray-700 dark:text-gray-300">
-              {t('competitions.already_registered', { days: diffDays, hours: diffHours })}
-            </p>
+            <button
+              className="px-4 py-1 bg-red-600 dark:bg-red-500 text-white rounded cursor-not-allowed opacity-70"
+              disabled
+            >
+              {t('competitions.already_registered_short', 'Ya inscrito')}
+            </button>
           ) : (
             <button
-              className="px-4 py-1 bg-green-600 dark:bg-green-500
-                         text-white rounded hover:bg-green-700 dark:hover:bg-green-600
-                         transition-colors"
+              className="px-4 py-1 bg-green-600 dark:bg-green-500 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
               onClick={() => onSubscribe(competition.id)}
             >
               {t('competitions.subscribe')}
