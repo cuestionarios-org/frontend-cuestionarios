@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { es } from 'date-fns/locale';
+import QuizzesSelector from './QuizzesSelector';
 
 const initialState = {
   title: '',
@@ -26,13 +27,16 @@ const states = [
 export default function CompetitionForm({ initialData, onSubmit, loading, open, onClose }) {
   const [form, setForm] = useState(initialState);
   const [dateError, setDateError] = useState('');
+  const [selectedQuizzes, setSelectedQuizzes] = useState([]);
 
   useEffect(() => {
     if (open) {
       if (initialData) {
         setForm({ ...initialState, ...initialData });
+        setSelectedQuizzes(initialData.quizzes ? initialData.quizzes.map(q => q.quiz_id || q.id) : []);
       } else {
         setForm(initialState);
+        setSelectedQuizzes([]);
       }
     }
   }, [open, initialData]);
@@ -74,7 +78,9 @@ export default function CompetitionForm({ initialData, onSubmit, loading, open, 
       return;
     }
     setDateError('');
-    onSubmit(form);
+    // Enviar quizzes seleccionados en el formato requerido
+    const quizzesArr = selectedQuizzes.map(id => ({ quiz_id: id }));
+    onSubmit({ ...form, quizzes: quizzesArr });
   };
 
   if (!open) return null
@@ -192,6 +198,9 @@ export default function CompetitionForm({ initialData, onSubmit, loading, open, 
             </div>
           </div>
           {dateError && <div className="text-red-600 text-sm mb-2">{dateError}</div>}
+          <div className="my-2">
+            <QuizzesSelector selectedQuizzes={selectedQuizzes} setSelectedQuizzes={setSelectedQuizzes} />
+          </div>
           <div className="flex gap-2 justify-end mt-4">
             <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">{loading ? 'Guardando...' : 'Guardar'}</button>
             <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600">Cancelar</button>

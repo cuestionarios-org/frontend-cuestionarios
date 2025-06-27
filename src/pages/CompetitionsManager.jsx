@@ -89,8 +89,8 @@ export default function CompetitionsManager() {
                 <th className="px-2 py-2 text-left text-gray-700 dark:text-white">Título</th>
                 <th className="px-2 py-2 text-left text-gray-700 dark:text-white">Descripción</th>
                 <th className="px-2 py-2 text-left text-gray-700 dark:text-white">Estado</th>
-                <th className="px-2 py-2 text-left text-gray-700 dark:text-white">Inicio</th>
-                <th className="px-2 py-2 text-left text-gray-700 dark:text-white">Fin</th>
+                <th className="px-2 py-2 text-left text-gray-700 dark:text-white">Quizzes</th>
+                <th className="px-2 py-2 text-left text-gray-700 dark:text-white">Fechas</th>
                 <th className="px-2 py-2 text-left text-gray-700 dark:text-white">Costos</th>
                 <th className="px-2 py-2 text-left text-gray-700 dark:text-white">Acciones</th>
               </tr>
@@ -117,8 +117,17 @@ export default function CompetitionsManager() {
                       {comp.state}
                     </span>
                   </td>
-                  <td className="px-2 py-2 text-gray-900 dark:text-white">{formatDate(comp.start_date)}</td>
-                  <td className="px-2 py-2 text-gray-900 dark:text-white">{formatDate(comp.end_date)}</td>
+                  <td className="px-2 py-2 text-center">
+                    <span className="inline-block text-xs font-semibold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded px-2 py-1">
+                      {Array.isArray(comp.quizzes) ? comp.quizzes.length : 0}
+                    </span>
+                  </td>
+                  <td className="px-2 py-2 text-gray-900 dark:text-white">
+                    <div className="flex flex-col gap-0.5 text-xs">
+                      <span><b>Inicio:</b> {formatDate(comp.start_date)}</span>
+                      <span><b>Fin:</b> {formatDate(comp.end_date)}</span>
+                    </div>
+                  </td>
                   <td className="px-2 py-2 text-gray-900 dark:text-white">
                     <div className="flex flex-col gap-1">
                       <span className="text-xs">Moneda: <b>{comp.currency_cost ?? 0}</b></span>
