@@ -9,6 +9,7 @@ import QuestionForm from '../components/QuestionForm'
 import QuestionsSearch from '../components/QuestionsSearch'
 import { questionService } from '../services/api'
 import QuizzesManager from './QuizzesManager'
+import CompetitionsManager from './CompetitionsManager'
 
 const tabs = [
   { key: 'questions', label: 'Preguntas y Respuestas' },
@@ -254,7 +255,9 @@ export default function AdminPage() {
         {tab === 'quizzes' && (
           <QuizzesManager />
         )}
-        {tab === 'competitions' && <div>Aquí irán las competencias.</div>}
+        {tab === 'competitions' &&(
+          <CompetitionsManager />
+        )}
       </div>
     </div>
   )
