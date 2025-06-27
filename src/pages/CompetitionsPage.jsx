@@ -35,6 +35,17 @@ export default function CompetitionsPage() {
     loadComps()
   }, [])
 
+  useEffect(() => {
+    // Si no hay pendientes pero sí activas, mostrar 'active' por defecto
+    if (!loading && comps.pending.length === 0 && comps.active.length > 0) {
+      setTab('active')
+    }
+    // Si tampoco hay activas pero sí finalizadas, mostrar 'finished'
+    else if (!loading && comps.pending.length === 0 && comps.active.length === 0 && comps.finished.length > 0) {
+      setTab('finished')
+    }
+  }, [loading, comps])
+
   const handleSubscribe = async (competitionId) => {
     try {
       await competitionService.inscribeUser(competitionId)

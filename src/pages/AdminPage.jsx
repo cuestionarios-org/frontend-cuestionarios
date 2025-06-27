@@ -10,6 +10,8 @@ import QuestionsSearch from '../components/QuestionsSearch'
 import { questionService } from '../services/api'
 import QuizzesManager from './QuizzesManager'
 import CompetitionsManager from './CompetitionsManager'
+import { useAuth } from '../context/AuthContext'
+import { Navigate } from 'react-router-dom'
 
 const tabs = [
   { key: 'questions', label: 'Preguntas y Respuestas' },
@@ -23,6 +25,11 @@ const initialForm = {
 }
 
 export default function AdminPage() {
+  const { user } = useAuth()
+  if (!user || user.role !== 'admin') {
+    return <Navigate to="/" replace />
+  }
+
   const [tab, setTab] = useState('questions')
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(initialForm)

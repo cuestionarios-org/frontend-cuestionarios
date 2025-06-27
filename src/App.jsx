@@ -9,6 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import QuizzesManager from './pages/QuizzesManager'
 import CompetitionsPage from './pages/CompetitionsPage'
 import AdminPage from './pages/AdminPage'
+import UserDashboard from './pages/UserDashboard'
 
 export default function App() {
   const { user, pending } = useAuth()
@@ -60,9 +61,15 @@ export default function App() {
             path="/"
             element={
               user ? (
-                <ProtectedRoute>
-                  <QuizzesManager />
-                </ProtectedRoute>
+                user.role === 'admin' ? (
+                  <ProtectedRoute>
+                    <QuizzesManager />
+                  </ProtectedRoute>
+                ) : (
+                  <ProtectedRoute>
+                    <UserDashboard />
+                  </ProtectedRoute>
+                )
               ) : (
                 <LandingPublic />
               )
