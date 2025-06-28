@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { questionService } from '../services/api';
 
-export default function QuizzesSelector({ selectedQuizzes, setSelectedQuizzes }) {
+export default function QuizzesSelector({ selectedQuizzes, setSelectedQuizzes, originalQuizzes = [] }) {
   const [quizzes, setQuizzes] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,14 +26,28 @@ export default function QuizzesSelector({ selectedQuizzes, setSelectedQuizzes })
     );
   };
 
+  // Calcular agregados y eliminados
+  const added = selectedQuizzes.filter(id => !originalQuizzes.includes(id)).length;
+  const removed = originalQuizzes.filter(id => !selectedQuizzes.includes(id)).length;
+
   return (
     <div className="my-4">
       <div
         className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 border rounded p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition"
         onClick={() => setShowPanel(true)}
       >
-        <span className="font-medium text-gray-700 dark:text-gray-200">
+        <span className="font-medium text-gray-700 dark:text-gray-200 flex items-center">
           Quizzes seleccionados: {selectedQuizzes.length}
+          {(added > 0 || removed > 0) && (
+            <>
+              {added > 0 && (
+                <span className="ml-2 text-green-600 dark:text-green-400 font-bold">+{added}</span>
+              )}
+              {removed > 0 && (
+                <span className="ml-2 text-red-600 dark:text-red-400 font-bold">-{removed}</span>
+              )}
+            </>
+          )}
         </span>
         <button type="button" className="text-blue-600 dark:text-blue-300 text-xs underline ml-2">Ver/Editar</button>
       </div>

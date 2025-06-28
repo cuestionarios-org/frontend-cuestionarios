@@ -149,9 +149,19 @@ export default function CompetitionsManager() {
                       <span className="inline-block text-xs font-semibold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded px-2 py-1 mr-1">
                         {Array.isArray(comp.quizzes) ? comp.quizzes.length : 0} quizzes
                       </span>
-                      <span className="inline-block text-xs font-semibold bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded px-2 py-1">
-                        {Array.isArray(comp.participants) ? comp.participants.length : 0} inscriptos
-                      </span>
+                      {/* Participantes con barra de progreso si hay límite */}
+                      {comp.participant_limit > 0 ? (
+                        <span className="inline-block text-xs font-semibold bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded px-2 py-1 relative min-w-[70px]">
+                          <span className="relative z-10">
+                            {Array.isArray(comp.participants) ? comp.participants.length : 0} / {comp.participant_limit} inscriptos
+                          </span>
+                          <span className="absolute left-0 top-0 h-full rounded bg-green-400/30 dark:bg-green-600/30 z-0 transition-all duration-300" style={{ width: `${Math.min(100, Math.round((Array.isArray(comp.participants) ? comp.participants.length : 0) / comp.participant_limit * 100))}%` }}></span>
+                        </span>
+                      ) : (
+                        <span className="inline-block text-xs font-semibold bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded px-2 py-1">
+                          {Array.isArray(comp.participants) ? comp.participants.length : 0} inscriptos
+                        </span>
+                      )}
                     </td>
                     <td className="px-2 py-2 text-gray-900 dark:text-white">
                       <div className="flex flex-col gap-0.5 text-xs">
@@ -183,7 +193,7 @@ export default function CompetitionsManager() {
                               <span className="text-gray-500">Cargando detalle...</span>
                             </div>
                           ) : (
-                            <>
+                            <React.Fragment>
                               {/* Countdown visual */}
                               <CountdownBlock start={detail[comp.id]?.start_date} end={detail[comp.id]?.end_date} />
                               {/* Descripción */}
@@ -191,62 +201,109 @@ export default function CompetitionsManager() {
                                 <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Descripción</div>
                                 <div className="text-gray-700 dark:text-gray-200 whitespace-pre-line">{detail[comp.id]?.description || <span className='italic text-gray-400 dark:text-gray-400'>Sin descripción</span>}</div>
                               </div>
-                              {/* Quizzes */}
+                              {/* Quizzes tabla mejorada */}
                               <div className="mb-2">
-                                <b className="text-gray-800 dark:text-gray-100">Quizzes:</b>
-                                <ul className="ml-4 list-disc">
-                                  {Array.isArray(detail[comp.id]?.quizzes) && detail[comp.id].quizzes.length > 0 ? detail[comp.id].quizzes.map(qz => (
-                                    <li key={qz.id || qz.quiz_id} className="transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded px-2 py-1">
-                                      <span className="font-semibold text-blue-700 dark:text-blue-300">
-                                        {qz.title || `Quiz #${qz.id || qz.quiz_id}`}
-                                      </span>
-                                      {qz.questions && (
-                                        <ul className="ml-4 list-decimal mt-1">
-                                          {qz.questions.map(qq => (
-                                            <li key={qq.id} className="text-sm text-gray-700 dark:text-gray-200">{qq.text}</li>
-                                          ))}
-                                        </ul>
+                                <div className="overflow-x-auto mt-2">
+                                  <table className="min-w-[400px] text-xs border border-gray-200 dark:border-gray-700 rounded">
+                                    <thead>
+                                      <tr>
+                                        <th className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1 text-left font-semibold">Título</th>
+                                        <th className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1 text-left font-semibold">Categoría</th>
+                                        <th className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1 text-left font-semibold">Estado</th>
+                                        <th className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1 text-left font-semibold">Status</th>
+                                        <th className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1 text-left font-semibold">Preguntas</th>
+                                        <th className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1 text-left font-semibold">Tiempo</th>
+                                        <th className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1 text-left font-semibold">Inicio</th>
+                                        <th className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1 text-left font-semibold">Fin</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {Array.isArray(detail[comp.id]?.quizzes) && detail[comp.id].quizzes.length > 0 ? (
+                                        detail[comp.id].quizzes.map((qz, idx) => (
+                                          <tr key={qz.id || qz.quiz_id || idx} className="border-t border-gray-100 dark:border-gray-800">
+                                            <td className="px-2 py-1 text-gray-900 dark:text-gray-100 font-semibold">{qz.title}</td>
+                                            <td className="px-2 py-1 text-gray-700 dark:text-gray-200">{qz.category_name || '-'}</td>
+                                            <td className="px-2 py-1">
+                                              <span className={`px-2 py-0.5 rounded text-xs font-bold border 
+                                                ${qz.state === 'preparacion' ? 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700' : ''}
+                                                ${qz.state === 'lista' || qz.state === 'listo' ? 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700' : ''}
+                                                ${qz.state === 'en curso' ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700' : ''}
+                                                ${qz.state === 'cerrada' ? 'bg-gray-200 text-gray-700 border-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-500' : ''}
+                                                ${qz.state === 'finalizada' ? 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-200 dark:border-red-700' : ''}
+                                              `}>{qz.state}</span>
+                                            </td>
+                                            <td className="px-2 py-1">
+                                              <span className={`px-2 py-0.5 rounded text-xs font-bold border
+                                                ${qz.status === 'ACTIVO' ? 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700' : ''}
+                                                ${qz.status === 'COMPUTABLE' ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700' : ''}
+                                                ${qz.status === 'NO_COMPUTABLE' ? 'bg-gray-200 text-gray-700 border-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-500' : ''}
+                                              `}>{qz.status}</span>
+                                            </td>
+                                            <td className="px-2 py-1 text-center text-gray-900 dark:text-white">{qz.questions_count ?? (Array.isArray(qz.questions) ? qz.questions.length : 0)}</td>
+                                            <td className="px-2 py-1 text-center text-gray-900 dark:text-white">{qz.time_limit ? `${Math.floor(qz.time_limit/60)}m ${qz.time_limit%60}s` : '-'}</td>
+                                            <td className="px-2 py-1 text-gray-500 dark:text-gray-200">{qz.start_time ? formatDate(qz.start_time) : '-'}</td>
+                                            <td className="px-2 py-1 text-gray-500 dark:text-gray-200">{qz.end_time ? formatDate(qz.end_time) : '-'}</td>
+                                          </tr>
+                                        ))
+                                      ) : (
+                                        <tr><td colSpan={8} className="italic text-gray-400 dark:text-gray-400 ml-4">Sin quizzes</td></tr>
                                       )}
-                                    </li>
-                                  )) : <li className="italic text-gray-400 dark:text-gray-400">Sin quizzes</li>}
-                                </ul>
+                                    </tbody>
+                                  </table>
+                                </div>
                               </div>
                               {/* Inscriptos tabla */}
                               <div className="mb-2">
-                                <b className="text-gray-800 dark:text-gray-100">Inscriptos:</b>
-                                {Array.isArray(detail[comp.id]?.participants) && detail[comp.id].participants.length > 0 ? (
-                                  <div className="overflow-x-auto mt-2">
-                                    <table className="min-w-[220px] text-xs border border-gray-200 dark:border-gray-700 rounded">
-                                      <thead>
-                                        <tr className="bg-gray-100 dark:bg-gray-800">
-                                          <th className="px-2 py-1 text-left">Usuario</th>
-                                          <th className="px-2 py-1 text-left">Score</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {detail[comp.id].participants.map((p, idx) => (
+                                <div className="overflow-x-auto mt-2">
+                                  <table className="min-w-[220px] text-xs border border-gray-200 dark:border-gray-700 rounded">
+                                    <thead>
+                                      <tr>
+                                        <th colSpan={2} className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 text-left font-semibold">Inscriptos</th>
+                                      </tr>
+                                      <tr className="bg-gray-100 dark:bg-gray-800">
+                                        <th className="px-2 py-1 text-left text-gray-700 dark:text-white">Usuario</th>
+                                        <th className="px-2 py-1 text-left text-gray-700 dark:text-white">Score</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {Array.isArray(detail[comp.id]?.participants) && detail[comp.id].participants.length > 0 ? (
+                                        detail[comp.id].participants.map((p, idx) => (
                                           <tr key={p.participant_id || p.id || idx} className="border-t border-gray-100 dark:border-gray-800">
                                             <td className="px-2 py-1 text-gray-900 dark:text-gray-100">{p.username || p.email || p.participant_id}</td>
                                             <td className="px-2 py-1 text-gray-900 dark:text-gray-100">{typeof p.score === 'number' ? p.score : '-'}</td>
                                           </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                ) : <div className="italic text-gray-400 dark:text-gray-400 ml-4">Sin inscriptos</div>}
-                              </div>
-                              {/* Creada/modificada por */}
-                              <div className="flex flex-wrap gap-4 mt-4">
-                                <div className="bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-700 rounded px-3 py-2 text-xs text-blue-900 dark:text-blue-200">
-                                  <b>Creada por:</b> {detail[comp.id]?.created_by ?? '-'}
+                                        ))
+                                      ) : (
+                                        <tr><td colSpan={2} className="italic text-gray-400 dark:text-gray-400 ml-4">Sin inscriptos</td></tr>
+                                      )}
+                                    </tbody>
+                                  </table>
                                 </div>
-                                {detail[comp.id]?.modified_by && (
-                                  <div className="bg-green-100 dark:bg-green-900/40 border border-green-300 dark:border-green-700 rounded px-3 py-2 text-xs text-green-900 dark:text-green-200">
-                                    <b>Modificada por:</b> {detail[comp.id]?.modified_by}
-                                  </div>
-                                )}
                               </div>
-                            </>
+                              {/* Creada/modificada por (un solo recuadro, modif arriba si existe) */}
+                              <div className="mt-4">
+                                <div className="bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-700 rounded px-3 py-2 text-xs text-blue-900 dark:text-blue-200 flex flex-col gap-1">
+                                  {detail[comp.id]?.modified_by && (
+                                    <div className="flex flex-row items-center gap-2">
+                                      <span className="font-semibold">Modificada por:</span>
+                                      <span>{detail[comp.id].modified_by.username}</span>
+                                      {detail[comp.id].modified_by.date && (
+                                        <span className="ml-2 text-xs text-gray-600 dark:text-gray-300">{formatDate(detail[comp.id].modified_by.date)}</span>
+                                      )}
+                                    </div>
+                                  )}
+                                  {detail[comp.id]?.created_by && (
+                                    <div className="flex flex-row items-center gap-2">
+                                      <span className="font-semibold">Creada por:</span>
+                                      <span>{detail[comp.id].created_by.username}</span>
+                                      {detail[comp.id].created_by.date && (
+                                        <span className="ml-2 text-xs text-gray-600 dark:text-gray-300">{formatDate(detail[comp.id].created_by.date)}</span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </React.Fragment>
                           )}
                         </div>
                       </td>
@@ -273,7 +330,7 @@ export default function CompetitionsManager() {
 // Animación fade-in
 // Agrega en tu CSS global o tailwind.config.js:
 // .animate-fade-in { animation: fadeIn 0.3s; }
-// @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px);} to { opacity: 1; transform: none;} }
+// @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px);} to { opacity: 1, transform: none;} }
 
 // Renderiza countdown para fechas
 function renderCountdown(date, type, startDate) {

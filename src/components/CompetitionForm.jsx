@@ -28,15 +28,21 @@ export default function CompetitionForm({ initialData, onSubmit, loading, open, 
   const [form, setForm] = useState(initialState);
   const [dateError, setDateError] = useState('');
   const [selectedQuizzes, setSelectedQuizzes] = useState([]);
+  const [serverError, setServerError] = useState('');
+  const [originalQuizzes, setOriginalQuizzes] = useState([]);
 
   useEffect(() => {
     if (open) {
+      setServerError('');
       if (initialData) {
         setForm({ ...initialState, ...initialData });
-        setSelectedQuizzes(initialData.quizzes ? initialData.quizzes.map(q => q.quiz_id || q.id) : []);
+        const orig = initialData.quizzes ? initialData.quizzes.map(q => q.quiz_id || q.id) : [];
+        setSelectedQuizzes(orig);
+        setOriginalQuizzes(orig);
       } else {
         setForm(initialState);
         setSelectedQuizzes([]);
+        setOriginalQuizzes([]);
       }
     }
   }, [open, initialData]);
@@ -64,7 +70,7 @@ export default function CompetitionForm({ initialData, onSubmit, loading, open, 
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // Validación de fechas
     if (!form.start_date || !form.end_date) {
@@ -78,9 +84,21 @@ export default function CompetitionForm({ initialData, onSubmit, loading, open, 
       return;
     }
     setDateError('');
+    setServerError('');
     // Enviar quizzes seleccionados en el formato requerido
     const quizzesArr = selectedQuizzes.map(id => ({ quiz_id: id }));
-    onSubmit({ ...form, quizzes: quizzesArr });
+    try {
+      await onSubmit({ ...form, quizzes: quizzesArr });
+    } catch (err) {
+      // Mostrar solo el mensaje de la API si existe
+      if (err && err.response && err.response.data && err.response.data.msg) {
+        setServerError(err.response.data.msg);
+      } else if (err && err.msg) {
+        setServerError(err.msg);
+      } else {
+        setServerError(''); // No mostrar mensaje genérico
+      }
+    }
   };
 
   if (!open) return null
@@ -94,6 +112,7 @@ export default function CompetitionForm({ initialData, onSubmit, loading, open, 
           </span>
         )}
         <form onSubmit={handleSubmit} className="competition-form space-y-4">
+          {serverError && <div className="text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded px-3 py-2 text-sm mb-2">{serverError}</div>}
           <h2 className="text-xl font-bold mb-2 text-gray-800 dark:text-white">{initialData ? 'Editar' : 'Nueva'} Competencia</h2>
           <input
             name="title"
@@ -199,7 +218,11 @@ export default function CompetitionForm({ initialData, onSubmit, loading, open, 
           </div>
           {dateError && <div className="text-red-600 text-sm mb-2">{dateError}</div>}
           <div className="my-2">
-            <QuizzesSelector selectedQuizzes={selectedQuizzes} setSelectedQuizzes={setSelectedQuizzes} />
+            <QuizzesSelector 
+              selectedQuizzes={selectedQuizzes} 
+              setSelectedQuizzes={setSelectedQuizzes}
+              originalQuizzes={originalQuizzes}
+            />
           </div>
           <div className="flex gap-2 justify-end mt-4">
             <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">{loading ? 'Guardando...' : 'Guardar'}</button>
