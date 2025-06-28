@@ -47,13 +47,11 @@ export default function AdminPage() {
   const categories = useCategories()
   const { questions, setQuestions, loading, error } = useQuestions(tab, filterCategory, filterState, searchText)
 
-  // LOG: Ver preguntas crudas recibidas
-  console.log('Preguntas recibidas del backend:', questions);
+  
   // LOG: Ver preguntas tras filtro de búsqueda
   const filteredQuestions = questions.filter(q =>
     q.question.text.toLowerCase().includes(searchText.toLowerCase())
   );
-  console.log('Preguntas tras filtro de búsqueda:', filteredQuestions);
 
   // Handlers
   const handleFormChange = (e) => {

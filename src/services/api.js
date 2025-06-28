@@ -64,7 +64,10 @@ export const questionService = {
   },
   getAllQuizzes: () => {
     return apiClient.get('/quizzes')
-  }
+  },
+  getQuizById: (id) => {
+    return apiClient.get(`/quizzes/${id}`)
+  },
 }
 
 export default apiClient

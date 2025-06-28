@@ -10,6 +10,9 @@ export default function QuizzesManager() {
   const [editingQuiz, setEditingQuiz] = useState(null)
   const [loading, setLoading] = useState(false)
   const [quizLoading, setQuizLoading] = useState(false)
+  const [expandedQuizId, setExpandedQuizId] = useState(null)
+  const [expandedQuizDetail, setExpandedQuizDetail] = useState(null)
+  const [loadingDetail, setLoadingDetail] = useState(false)
   const categories = useCategories()
   const { questions, loading: loadingQuestions } = usePublishedQuestions()
 
@@ -102,32 +105,89 @@ export default function QuizzesManager() {
                 <tr><td colSpan={8} className="text-center text-gray-500 dark:text-gray-300 py-4">No hay cuestionarios.</td></tr>
               )}
               {quizzes.map(quiz => (
-                <tr key={quiz.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                  <td className="px-2 py-2 text-gray-900 dark:text-white">
-                    <span className="inline-block px-2 py-1 text-xs font-semibold rounded bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border border-blue-300 dark:border-blue-700">{quiz.id}</span>
-                  </td>
-                  <td className="px-2 py-2 text-gray-900 dark:text-white">{quiz.title}</td>
-                  <td className="px-2 py-2 max-w-[180px] truncate text-gray-900 dark:text-white" title={quiz.description}>{quiz.description || '-'}</td>
-                  <td className="px-2 py-2 text-gray-900 dark:text-white">{
-                    categories.find(cat => cat.id === quiz.category_id)?.name || '-'
-                  }</td>
-                  <td className="px-2 py-2 text-gray-900 dark:text-white">{quiz.questions?.length || 0}</td>
-                  <td className="px-2 py-2 capitalize">
-                    <span className={`px-2 py-1 rounded text-xs font-semibold 
-                      ${quiz.state === 'activo' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                        quiz.state === 'finalizado' ? 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200' :
-                        quiz.state === 'inactivo' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                        'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'}
-                    `}>{quiz.state}</span>
-                  </td>
-                  <td className="px-2 py-2 text-gray-900 dark:text-white">{quiz.time_limit ? quiz.time_limit + 's' : '-'}</td>
-                  <td className="px-2 py-2 flex gap-2">
-                    <button
-                      className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                      onClick={() => handleEdit(quiz)}
-                    >Editar</button>
-                  </td>
-                </tr>
+                <React.Fragment key={quiz.id}>
+                  <tr
+                    className={
+                      `border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer` +
+                      (expandedQuizId === quiz.id ? ' bg-blue-50 dark:bg-blue-900/30' : '')
+                    }
+                    onClick={async () => {
+                      if (expandedQuizId === quiz.id) {
+                        setExpandedQuizId(null)
+                        setExpandedQuizDetail(null)
+                      } else {
+                        setExpandedQuizId(quiz.id)
+                        setLoadingDetail(true)
+                        try {
+                          const res = await questionService.getQuizById?.(quiz.id)
+                          setExpandedQuizDetail(res?.data || quiz)
+                        } catch {
+                          setExpandedQuizDetail(quiz)
+                        } finally {
+                          setLoadingDetail(false)
+                        }
+                      }
+                    }}
+                  >
+                    <td className="px-2 py-2 text-gray-900 dark:text-white">
+                      <span className="inline-block px-2 py-1 text-xs font-semibold rounded bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border border-blue-300 dark:border-blue-700">{quiz.id}</span>
+                    </td>
+                    <td className="px-2 py-2 text-gray-900 dark:text-white">{quiz.title}</td>
+                    <td className="px-2 py-2 max-w-[180px] truncate text-gray-900 dark:text-white" title={quiz.description}>{quiz.description || '-'}</td>
+                    <td className="px-2 py-2 text-gray-900 dark:text-white">{
+                      categories.find(cat => cat.id === quiz.category_id)?.name || '-'
+                    }</td>
+                    <td className="px-2 py-2 text-gray-900 dark:text-white">{quiz.questions?.length || 0}</td>
+                    <td className="px-2 py-2 capitalize">
+                      <span className={`px-2 py-1 rounded text-xs font-semibold 
+                        ${quiz.state === 'activo' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                          quiz.state === 'finalizado' ? 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200' :
+                          quiz.state === 'inactivo' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                          'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'}
+                      `}>{quiz.state}</span>
+                    </td>
+                    <td className="px-2 py-2 text-gray-900 dark:text-white">{quiz.time_limit ? quiz.time_limit + 's' : '-'}</td>
+                    <td className="px-2 py-2 flex gap-2">
+                      <button
+                        className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                        onClick={e => { e.stopPropagation(); handleEdit(quiz); }}
+                      >Editar</button>
+                    </td>
+                  </tr>
+                  {expandedQuizId === quiz.id && (
+                    <tr>
+                      <td colSpan={8} className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+                        {loadingDetail ? (
+                          <div className="text-center text-gray-500 dark:text-gray-300">Cargando detalles...</div>
+                        ) : (
+                          <div className="text-sm text-gray-800 dark:text-gray-100">
+                            <div className="mb-2 font-semibold">Preguntas del cuestionario:</div>
+                            {expandedQuizDetail?.questions && expandedQuizDetail.questions.length > 0 ? (
+                              <ul className="list-disc ml-6">
+                                {expandedQuizDetail.questions.map(q => (
+                                  <li key={q.id} className="mb-1">
+                                    <span className="font-medium">{q.text}</span>
+                                    {q.answers && q.answers.length > 0 && (
+                                      <ul className="list-decimal ml-4 mt-1">
+                                        {q.answers.map(a => (
+                                          <li key={a.id} className={a.is_correct ? 'font-bold text-green-700 dark:text-green-400' : 'text-gray-700 dark:text-gray-200'}>
+                                            {a.text} {a.is_correct && <span className="ml-1">✔</span>}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <div className="italic text-gray-500">No hay preguntas asociadas.</div>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               ))}
             </tbody>
           </table>
