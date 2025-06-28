@@ -10,6 +10,8 @@ import QuizzesManager from './pages/QuizzesManager'
 import CompetitionsPage from './pages/CompetitionsPage'
 import AdminPage from './pages/AdminPage'
 import UserDashboard from './pages/UserDashboard'
+import CompetitionPlay from './pages/CompetitionPlay'
+import QuizPlayPage from './pages/QuizPlayPage'
 
 export default function App() {
   const { user, pending } = useAuth()
@@ -53,6 +55,24 @@ export default function App() {
             element={
               <ProtectedRoute>
                 {user?.role === 'admin' ? <AdminPage /> : <Navigate to="/" />}
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/competition/:id/play"
+            element={
+              <ProtectedRoute>
+                <CompetitionPlay />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/competition/:id/quiz/:quizId/play"
+            element={
+              <ProtectedRoute>
+                <QuizPlayPage />
               </ProtectedRoute>
             }
           />

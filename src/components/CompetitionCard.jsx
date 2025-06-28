@@ -47,10 +47,8 @@ export default function CompetitionCard({ competition, tab, userId, onSubscribe 
 
         {tab === 'active' && (
           <button
-            className="px-4 py-1 bg-blue-600 dark:bg-blue-500
-                       text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600
-                       transition-colors"
-            onClick={() => navigate(`/competitions/${competition.id}`)}
+            className="px-4 py-1 bg-blue-600 dark:bg-blue-500 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
+            onClick={() => navigate(`/competition/${competition.id}/play`)}
           >
             {t('competitions.go_to_competition')}
           </button>

@@ -12,6 +12,7 @@ import QuizzesManager from './QuizzesManager'
 import CompetitionsManager from './CompetitionsManager'
 import { useAuth } from '../context/AuthContext'
 import { Navigate } from 'react-router-dom'
+import QuestionListItem from '../components/QuestionListItem'
 
 const tabs = [
   { key: 'questions', label: 'Preguntas y Respuestas' },
@@ -45,6 +46,14 @@ export default function AdminPage() {
 
   const categories = useCategories()
   const { questions, setQuestions, loading, error } = useQuestions(tab, filterCategory, filterState, searchText)
+
+  // LOG: Ver preguntas crudas recibidas
+  console.log('Preguntas recibidas del backend:', questions);
+  // LOG: Ver preguntas tras filtro de búsqueda
+  const filteredQuestions = questions.filter(q =>
+    q.question.text.toLowerCase().includes(searchText.toLowerCase())
+  );
+  console.log('Preguntas tras filtro de búsqueda:', filteredQuestions);
 
   // Handlers
   const handleFormChange = (e) => {
@@ -241,22 +250,12 @@ export default function AdminPage() {
             {error && <ErrorMessage message={error} />}
             {!loading && !error && (
               <ul className="space-y-4">
-                {questions
-                  .filter(q =>
-                    q.question.text
-                      .toLowerCase()
-                      .includes(searchText.toLowerCase())
-                  ).length === 0 ? (
+                {filteredQuestions.length === 0 ? (
                   <li className="text-gray-500">No hay preguntas registradas.</li>
                 ) : (
-                  questions
-                    .filter(q =>
-                      q.question.text
-                        .toLowerCase()
-                        .includes(searchText.toLowerCase())
-                    )
+                  filteredQuestions
                     .map(q => (
-                      <QuestionCard
+                      <QuestionListItem
                         key={q.question.id}
                         q={q}
                         categories={categories}
