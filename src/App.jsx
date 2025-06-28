@@ -63,7 +63,7 @@ export default function App() {
               user ? (
                 user.role === 'admin' ? (
                   <ProtectedRoute>
-                    <QuizzesManager />
+                    <UserDashboard />
                   </ProtectedRoute>
                 ) : (
                   <ProtectedRoute>
