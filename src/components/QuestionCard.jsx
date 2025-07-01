@@ -2,11 +2,13 @@ import React from 'react';
 
 export default function QuestionCard({ question, value, onChange }) {
   if (!question) return null;
+  // Asegura compatibilidad: usa question.answers si no hay question.options
+  const options = question.options || question.answers || [];
   return (
     <div className="mb-4">
       <div className="font-semibold text-gray-800 dark:text-white mb-2">{question.text}</div>
       <div className="flex flex-col gap-2">
-        {question.options && question.options.map(opt => (
+        {options.map(opt => (
           <label key={opt.id} className="flex items-center gap-2 cursor-pointer">
             <input
               type="radio"

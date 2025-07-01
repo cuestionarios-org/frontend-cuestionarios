@@ -74,7 +74,12 @@ export default function QuizPlayPage() {
     setSubmitting(true);
     setFinished(true);
     try {
-      await quizParticipationService.finishQuiz(quizId, user.id, { answers });
+      // Transformar answers a array de objetos {question_id, answer_id}
+      const answersArray = Object.entries(answers).map(([question_id, answer_id]) => ({
+        question_id: Number(question_id),
+        answer_id
+      }));
+      await quizParticipationService.finishQuiz(quizId, user.id, { answers: answersArray });
     } catch (e) {}
     setSubmitting(false);
   };

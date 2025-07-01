@@ -13,11 +13,13 @@ import CompetitionsManager from './CompetitionsManager'
 import { useAuth } from '../context/AuthContext'
 import { Navigate } from 'react-router-dom'
 import QuestionListItem from '../components/QuestionListItem'
+import UsersManager from './UsersManager'
 
 const tabs = [
   { key: 'questions', label: 'Preguntas y Respuestas' },
   { key: 'quizzes', label: 'Cuestionarios' },
-  { key: 'competitions', label: 'Competencias' }
+  { key: 'competitions', label: 'Competencias' },
+  { key: 'users', label: 'Usuarios' }
 ]
 
 const initialForm = {
@@ -271,6 +273,9 @@ export default function AdminPage() {
         )}
         {tab === 'competitions' &&(
           <CompetitionsManager />
+        )}
+        {tab === 'users' && (
+          <UsersManager />
         )}
       </div>
     </div>

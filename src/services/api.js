@@ -70,4 +70,8 @@ export const questionService = {
   },
 }
 
+export const userService = {
+  getAll: () => apiClient.get('/auth/list'),
+};
+
 export default apiClient
