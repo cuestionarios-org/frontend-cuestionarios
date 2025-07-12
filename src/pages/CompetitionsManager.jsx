@@ -4,6 +4,8 @@ import CompetitionForm from '../components/CompetitionForm'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import ReactDatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 export default function CompetitionsManager() {
   const [competitions, setCompetitions] = useState([])
@@ -17,6 +19,7 @@ export default function CompetitionsManager() {
   const [editQuizRowId, setEditQuizRowId] = useState(null);
   const [editQuizData, setEditQuizData] = useState({});
   const [savingQuiz, setSavingQuiz] = useState(false);
+  const [quizErrors, setQuizErrors] = useState({});
 
   const fetchCompetitions = async () => {
     setLoading(true)
@@ -91,17 +94,35 @@ export default function CompetitionsManager() {
     }
   }
 
+  const validateQuizInputs = (data) => {
+    const errors = {};
+    if (!data.time_limit || Number(data.time_limit) <= 0) {
+      errors.time_limit = 'El tiempo debe ser mayor a 0.';
+    }
+    if (data.start_time && data.end_time && data.start_time >= data.end_time) {
+      errors.start_time = 'La fecha de inicio debe ser anterior a la de fin.';
+      errors.end_time = 'La fecha de fin debe ser posterior a la de inicio.';
+    }
+    return errors;
+  };
+
   const handleEditQuizRow = (quiz) => {
     setEditQuizRowId(quiz.id || quiz.quiz_id);
-    setEditQuizData({
+    const initialData = {
       time_limit: quiz.time_limit || '',
       start_time: quiz.start_time ? quiz.start_time.slice(0,16) : '',
       end_time: quiz.end_time ? quiz.end_time.slice(0,16) : '',
-    });
+    };
+    setEditQuizData(initialData);
+    setQuizErrors(validateQuizInputs(initialData));
   };
 
   const handleQuizInputChange = (field, value) => {
-    setEditQuizData(prev => ({ ...prev, [field]: value }));
+    setEditQuizData(prev => {
+      const newData = { ...prev, [field]: value };
+      setQuizErrors(validateQuizInputs(newData));
+      return newData;
+    });
   };
 
   const handleSaveQuizRow = async (quiz, compId) => {
@@ -253,88 +274,93 @@ export default function CompetitionsManager() {
                                     <tbody>
                                       {Array.isArray(detail[comp.id]?.quizzes) && detail[comp.id].quizzes.length > 0 ? (
                                         detail[comp.id].quizzes.map((qz, idx) => (
-                                          <tr key={qz.id || qz.quiz_id || idx} className="border-t border-gray-100 dark:border-gray-800">
-                                            <td className="px-2 py-1 text-gray-900 dark:text-gray-100 font-semibold">{qz.title}</td>
-                                            <td className="px-2 py-1 text-gray-700 dark:text-gray-200">{qz.category_name || '-'}</td>
-                                            <td className="px-2 py-1">
-                                              <span className={`px-2 py-0.5 rounded text-xs font-bold border 
-                                                ${qz.state === 'preparacion' ? 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700' : ''}
-                                                ${qz.state === 'lista' || qz.state === 'listo' ? 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700' : ''}
-                                                ${qz.state === 'en curso' ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700' : ''}
-                                                ${qz.state === 'cerrada' ? 'bg-gray-200 text-gray-700 border-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-500' : ''}
-                                                ${qz.state === 'finalizada' ? 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-200 dark:border-red-700' : ''}
-                                              `}>{qz.state}</span>
-                                            </td>
-                                            <td className="px-2 py-1">
-                                              <span className={`px-2 py-0.5 rounded text-xs font-bold border
-                                                ${qz.status === 'ACTIVO' ? 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700' : ''}
-                                                ${qz.status === 'COMPUTABLE' ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700' : ''}
-                                                ${qz.status === 'NO_COMPUTABLE' ? 'bg-gray-200 text-gray-700 border-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-500' : ''}
-                                              `}>{qz.status}</span>
-                                            </td>
-                                            <td className="px-2 py-1 text-center text-gray-900 dark:text-white">{qz.questions_count ?? (Array.isArray(qz.questions) ? qz.questions.length : 0)}</td>
-                                            <td className="px-2 py-1 text-center text-gray-900 dark:text-white">
-                                              {editQuizRowId === (qz.id || qz.quiz_id) ? (
-                                                <input
-                                                  type="number"
-                                                  min="0"
-                                                  value={editQuizData.time_limit}
-                                                  onChange={e => handleQuizInputChange('time_limit', e.target.value)}
-                                                  className="w-16 px-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
-                                                />
-                                              ) : (
-                                                qz.time_limit ? `${Math.floor(qz.time_limit/60)}m ${qz.time_limit%60}s` : '-'
-                                              )}
-                                            </td>
-                                            <td className="px-2 py-1 text-gray-500 dark:text-gray-200">
-                                              {editQuizRowId === (qz.id || qz.quiz_id) ? (
-                                                <input
-                                                  type="datetime-local"
-                                                  value={editQuizData.start_time}
-                                                  onChange={e => handleQuizInputChange('start_time', e.target.value)}
-                                                  className="w-40 px-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
-                                                />
-                                              ) : (
-                                                qz.start_time ? formatDate(qz.start_time) : '-'
-                                              )}
-                                            </td>
-                                            <td className="px-2 py-1 text-gray-500 dark:text-gray-200">
-                                              {editQuizRowId === (qz.id || qz.quiz_id) ? (
-                                                <input
-                                                  type="datetime-local"
-                                                  value={editQuizData.end_time}
-                                                  onChange={e => handleQuizInputChange('end_time', e.target.value)}
-                                                  className="w-40 px-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
-                                                />
-                                              ) : (
-                                                qz.end_time ? formatDate(qz.end_time) : '-'
-                                              )}
-                                            </td>
-                                            <td className="px-2 py-1">
-                                              {editQuizRowId === (qz.id || qz.quiz_id) ? (
-                                                <>
-                                                  <button
-                                                    onClick={() => handleSaveQuizRow(qz, comp.id)}
-                                                    className="px-2 py-1 bg-green-600 text-white rounded mr-2"
-                                                    disabled={savingQuiz}
-                                                  >Guardar</button>
-                                                  <button
-                                                    onClick={() => setEditQuizRowId(null)}
-                                                    className="px-2 py-1 bg-gray-400 text-white rounded"
-                                                    disabled={savingQuiz}
-                                                  >Cancelar</button>
-                                                </>
-                                              ) : (
+                                          <React.Fragment key={qz.id || qz.quiz_id || idx}>
+                                            <tr className="border-t border-gray-100 dark:border-gray-800">
+                                              <td className="px-2 py-1 text-gray-900 dark:text-gray-100 font-semibold">{qz.title}</td>
+                                              <td className="px-2 py-1 text-gray-700 dark:text-gray-200">{qz.category_name || '-'}</td>
+                                              <td className="px-2 py-1">
+                                                <span className={`px-2 py-0.5 rounded text-xs font-bold border 
+                                                  ${qz.state === 'preparacion' ? 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700' : ''}
+                                                  ${qz.state === 'lista' || qz.state === 'listo' ? 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700' : ''}
+                                                  ${qz.state === 'en curso' ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700' : ''}
+                                                  ${qz.state === 'cerrada' ? 'bg-gray-200 text-gray-700 border-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-500' : ''}
+                                                  ${qz.state === 'finalizada' ? 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-200 dark:border-red-700' : ''}
+                                                `}>{qz.state}</span>
+                                              </td>
+                                              <td className="px-2 py-1">
+                                                <span className={`px-2 py-0.5 rounded text-xs font-bold border
+                                                  ${qz.status === 'ACTIVO' ? 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700' : ''}
+                                                  ${qz.status === 'COMPUTABLE' ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700' : ''}
+                                                  ${qz.status === 'NO_COMPUTABLE' ? 'bg-gray-200 text-gray-700 border-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-500' : ''}
+                                                `}>{qz.status}</span>
+                                              </td>
+                                              <td className="px-2 py-1 text-center text-gray-900 dark:text-white">{qz.questions_count ?? (Array.isArray(qz.questions) ? qz.questions.length : 0)}</td>
+                                              <td className="px-2 py-1 text-center text-gray-900 dark:text-white">{qz.time_limit ? `${Math.floor(qz.time_limit/60)}m ${qz.time_limit%60}s` : '-'}</td>
+                                              <td className="px-2 py-1 text-gray-500 dark:text-gray-200">{qz.start_time ? formatDate(qz.start_time) : '-'}</td>
+                                              <td className="px-2 py-1 text-gray-500 dark:text-gray-200">{qz.end_time ? formatDate(qz.end_time) : '-'}</td>
+                                              <td className="px-2 py-1">
                                                 <button
                                                   onClick={() => handleEditQuizRow(qz)}
                                                   className="px-2 py-1 bg-blue-600 text-white rounded"
                                                 >Editar</button>
-                                              )}
-                                            </td>
-                                          </tr>
+                                              </td>
+                                            </tr>
+                                            {editQuizRowId === (qz.id || qz.quiz_id) && (
+                                              <tr>
+                                                <td colSpan={9} className="bg-blue-50 dark:bg-blue-900/40 border-t border-blue-200 dark:border-blue-700 p-4 animate-fade-in">
+                                                  <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
+                                                    <div className="flex flex-col gap-2 w-full max-w-xs">
+                                                      <label className="text-xs mb-1 text-gray-700 dark:text-gray-200">Tiempo (segundos)</label>
+                                                      <input type="number" min="0" value={editQuizData.time_limit}
+                                                        onChange={e => handleQuizInputChange('time_limit', e.target.value)}
+                                                        className={`w-full px-2 py-1 rounded border focus:outline-none focus:ring-2 transition bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:ring-blue-400 dark:focus:ring-blue-700 ${quizErrors.time_limit ? 'border-red-500 dark:border-red-400 focus:ring-red-400 dark:focus:ring-red-600' : ''}`}
+                                                      />
+                                                      {quizErrors.time_limit && <span className="text-xs text-red-600 dark:text-red-400 mt-1">{quizErrors.time_limit}</span>}
+                                                    </div>
+                                                    <div className="flex flex-col gap-2 w-full max-w-xs">
+                                                      <label className="text-xs mb-1 text-gray-700 dark:text-gray-200">Inicio</label>
+                                                      <ReactDatePicker
+                                                        selected={editQuizData.start_time ? new Date(editQuizData.start_time) : null}
+                                                        onChange={date => handleQuizInputChange('start_time', date ? date.toISOString().slice(0,16) : '')}
+                                                        showTimeSelect
+                                                        timeFormat="HH:mm"
+                                                        timeIntervals={15}
+                                                        dateFormat="dd/MM/yyyy HH:mm"
+                                                        locale={es}
+                                                        placeholderText="Fecha de inicio"
+                                                        className="w-full px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                                                        isClearable
+                                                      />
+                                                      {quizErrors.start_time && <span className="text-xs text-red-600 dark:text-red-400 mt-1">{quizErrors.start_time}</span>}
+                                                    </div>
+                                                    <div className="flex flex-col gap-2 w-full max-w-xs">
+                                                      <label className="text-xs mb-1 text-gray-700 dark:text-gray-200">Fin</label>
+                                                      <ReactDatePicker
+                                                        selected={editQuizData.end_time ? new Date(editQuizData.end_time) : null}
+                                                        onChange={date => handleQuizInputChange('end_time', date ? date.toISOString().slice(0,16) : '')}
+                                                        showTimeSelect
+                                                        timeFormat="HH:mm"
+                                                        timeIntervals={15}
+                                                        dateFormat="dd/MM/yyyy HH:mm"
+                                                        locale={es}
+                                                        placeholderText="Fecha de fin"
+                                                        className="w-full px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                                                        isClearable
+                                                      />
+                                                      {quizErrors.end_time && <span className="text-xs text-red-600 dark:text-red-400 mt-1">{quizErrors.end_time}</span>}
+                                                    </div>
+                                                    <div className="flex gap-2 mt-2">
+                                                      <button onClick={() => handleSaveQuizRow(qz, comp.id)} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow focus:outline-none focus:ring-2 focus:ring-green-400 dark:focus:ring-green-700 transition" disabled={savingQuiz || Object.keys(quizErrors).length > 0}>Guardar</button>
+                                                      <button onClick={() => setEditQuizRowId(null)} className="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded shadow focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 transition" disabled={savingQuiz}>Cancelar</button>
+                                                    </div>
+                                                  </div>
+                                                </td>
+                                              </tr>
+                                            )}
+                                          </React.Fragment>
                                         ))
                                       ) : (
-                                        <tr><td colSpan={8} className="italic text-gray-400 dark:text-gray-400 ml-4">Sin quizzes</td></tr>
+                                        <tr><td colSpan={9} className="italic text-gray-400 dark:text-gray-400 ml-4">Sin quizzes</td></tr>
                                       )}
                                     </tbody>
                                   </table>
@@ -349,20 +375,20 @@ export default function CompetitionsManager() {
                                         <th colSpan={2} className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 text-left font-semibold">Inscriptos</th>
                                       </tr>
                                       <tr className="bg-gray-100 dark:bg-gray-800">
-                                        <th className="px-2 py-1 text-left text-gray-700 dark:text-white">Usuario</th>
-                                        <th className="px-2 py-1 text-left text-gray-700 dark:text-white">Score</th>
+                                        <th className="px-2 py-1 text-left text-gray-700 dark:text-gray-100 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">Usuario</th>
+                                        <th className="px-2 py-1 text-left text-gray-700 dark:text-gray-100 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">Score</th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {Array.isArray(detail[comp.id]?.participants) && detail[comp.id].participants.length > 0 ? (
                                         detail[comp.id].participants.map((p, idx) => (
-                                          <tr key={p.participant_id || p.id || idx} className="border-t border-gray-100 dark:border-gray-800">
+                                          <tr key={p.participant_id || p.id || idx} className="border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
                                             <td className="px-2 py-1 text-gray-900 dark:text-gray-100">{p.username || p.email || p.participant_id}</td>
                                             <td className="px-2 py-1 text-gray-900 dark:text-gray-100">{typeof p.score === 'number' ? p.score : '-'}</td>
                                           </tr>
                                         ))
                                       ) : (
-                                        <tr><td colSpan={2} className="italic text-gray-400 dark:text-gray-400 ml-4">Sin inscriptos</td></tr>
+                                        <tr><td colSpan={2} className="italic text-gray-400 dark:text-gray-400 ml-4 bg-white dark:bg-gray-900">Sin inscriptos</td></tr>
                                       )}
                                     </tbody>
                                   </table>
