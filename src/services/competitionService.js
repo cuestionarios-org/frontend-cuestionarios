@@ -5,4 +5,6 @@ export const competitionService = {
   getById: (id) => apiClient.get(`/competitions/${id}`),
   create: (data) => apiClient.post('/competitions', data),
   update: (id, data) => apiClient.put(`/competitions/${id}`, data),
+  updateCompetitionQuiz: (competitionQuizId, data) =>
+    apiClient.patch(`/competitions/competition-quiz/${competitionQuizId}`, data),
 }
