@@ -61,14 +61,19 @@ export default function QuizForm({
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onSubmit({
+    // Si el estado es 'listo', no enviar preguntas ni categoría
+    const isListo = initialData?.state === 'listo'
+    const payload = {
       title,
       description,
-      category_id: categoryId,
-      question_ids: selectedQuestions,
       state,
       time_limit: timeLimit ? Number(timeLimit) : null
-    })
+    }
+    if (!isListo) {
+      payload.category_id = categoryId
+      payload.question_ids = selectedQuestions
+    }
+    onSubmit(payload)
   }
 
   if (!open) return null
@@ -99,11 +104,13 @@ export default function QuizForm({
             onChange={e => setDescription(e.target.value)}
             rows={2}
           />
+          {/* Select de categoría: deshabilitado si estado es 'listo' */}
           <select
-            className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+            className={`w-full p-2 rounded border ${initialData?.state === 'listo' ? 'border-blue-400' : 'border-gray-300'} dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${initialData?.state === 'listo' ? 'bg-blue-50 text-blue-400 cursor-not-allowed' : ''}`}
             value={categoryId}
             onChange={e => setCategoryId(e.target.value)}
             required
+            disabled={initialData?.state === 'listo'}
           >
             <option value="">Selecciona una categoría</option>
             {categories.map(cat => (
@@ -124,25 +131,13 @@ export default function QuizForm({
                   <option
                     key={opt.value}
                     value={opt.value}
-                    disabled={
-                      initialData?.state === 'listo' && opt.value === 'preparacion'
-                    }
-                    style={
-                      initialData?.state === 'listo' && opt.value === 'preparacion'
-                        ? { color: '#aaa', backgroundColor: '#f3f4f6' }
-                        : {}
-                    }
+                    disabled={initialData?.state === 'listo' && opt.value === 'preparacion'}
+                    style={initialData?.state === 'listo' && opt.value === 'preparacion' ? { color: '#aaa', backgroundColor: '#f3f4f6' } : {}}
                   >
                     {opt.label}
-                    {initialData?.state === 'listo' && opt.value === 'preparacion' ? ' (no permitido)' : ''}
                   </option>
                 ))}
               </select>
-              {initialData?.state === 'listo' && (
-                <div className="text-xs text-gray-500 mt-1">
-                  No puedes volver a <span className="font-semibold">Preparación</span> desde <span className="font-semibold">Listo</span>.
-                </div>
-              )}
             </div>
             <div className="flex-1 min-w-0">
               <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">Tiempo límite (segundos)</label>
@@ -158,11 +153,17 @@ export default function QuizForm({
           </div>
           {/* Separador visual */}
           <hr className="my-2 border-gray-200 dark:border-gray-700" />
-          {/* Acordeón de preguntas */}
-          <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 border rounded p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition" onClick={() => setShowQuestionsFull(true)}>
-            <span className="font-medium text-gray-700 dark:text-gray-200">Preguntas seleccionadas: {selectedQuestions.length}</span>
-            <button type="button" className="text-blue-600 dark:text-blue-300 text-xs underline ml-2">Ver/Editar</button>
-          </div>
+          {/* Preguntas seleccionadas: solo muestra cantidad si estado es 'listo' */}
+          {initialData?.state === 'listo' ? (
+            <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 border rounded p-2">
+              <span className="font-medium text-gray-700 dark:text-gray-200">Preguntas seleccionadas: {selectedQuestions.length}</span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 border rounded p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition" onClick={() => setShowQuestionsFull(true)}>
+              <span className="font-medium text-gray-700 dark:text-gray-200">Preguntas seleccionadas: {selectedQuestions.length}</span>
+              <button type="button" className="text-blue-600 dark:text-blue-300 text-xs underline ml-2">Ver/Editar</button>
+            </div>
+          )}
           <div className="flex gap-2 justify-end mt-2">
             <button
               type="submit"
