@@ -13,6 +13,7 @@ export default function QuizzesManager() {
   const [expandedQuizId, setExpandedQuizId] = useState(null)
   const [expandedQuizDetail, setExpandedQuizDetail] = useState(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
+  const [formError, setFormError] = useState(null)
   const categories = useCategories()
   const { questions, loading: loadingQuestions } = usePublishedQuestions()
 
@@ -43,6 +44,7 @@ export default function QuizzesManager() {
 
   const handleSubmit = async (data) => {
     setQuizLoading(true)
+    setFormError(null)
     try {
       const quizPayload = {
         title: data.title,
@@ -67,6 +69,8 @@ export default function QuizzesManager() {
       setQuizzes(res.data || [])
       setShowForm(false)
       setEditingQuiz(null)
+    } catch (err) {
+      setFormError(err?.response?.data?.msg || 'Error al guardar los cambios.')
     } finally {
       setQuizLoading(false)
     }
@@ -201,6 +205,7 @@ export default function QuizzesManager() {
         questions={questions}
         initialData={editingQuiz}
         loading={quizLoading}
+        error={formError}
       />
     </div>
   )

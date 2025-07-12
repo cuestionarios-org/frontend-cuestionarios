@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import QuestionsFilters from './QuestionsFilters'
 import QuestionsSearch from './QuestionsSearch'
+import ErrorMessage from './ErrorMessage'
 
 const QUIZ_STATES = [
   { value: 'preparacion', label: 'Preparación' },
@@ -11,7 +12,7 @@ const QUIZ_STATES = [
 ]
 
 export default function QuizForm({
-  open, onClose, onSubmit, categories, questions, initialData, loading
+  open, onClose, onSubmit, categories, questions, initialData, loading, error
 }) {
   const [title, setTitle] = useState(initialData?.title || '')
   const [description, setDescription] = useState(initialData?.description || '')
@@ -42,17 +43,13 @@ export default function QuizForm({
     setShowQuestionsFull(false)
     setFilterCategory('')
     setSearchText('')
-
-    // Evitar scroll en el body cuando el modal está abierto
-    if (open) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => {
-      document.body.style.overflow = ''
-    }
   }, [open, initialData])
+
+  useEffect(() => {
+    if (error && initialData?.state) {
+      setState(initialData.state)
+    }
+  }, [error, initialData])
 
   const handleToggleQuestion = (id) => {
     setSelectedQuestions(prev =>
@@ -87,6 +84,7 @@ export default function QuizForm({
         )}
         <form onSubmit={handleSubmit} className={`space-y-4 ${showQuestionsFull ? 'hidden' : ''}`}>
           <h2 className="text-xl font-bold mb-2 text-gray-800 dark:text-white">{initialData ? 'Editar' : 'Nuevo'} Cuestionario</h2>
+          {error && <ErrorMessage message={error} />}
           <input
             className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100"
             placeholder="Título del cuestionario"
@@ -123,9 +121,28 @@ export default function QuizForm({
                 required
               >
                 {QUIZ_STATES.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  <option
+                    key={opt.value}
+                    value={opt.value}
+                    disabled={
+                      initialData?.state === 'listo' && opt.value === 'preparacion'
+                    }
+                    style={
+                      initialData?.state === 'listo' && opt.value === 'preparacion'
+                        ? { color: '#aaa', backgroundColor: '#f3f4f6' }
+                        : {}
+                    }
+                  >
+                    {opt.label}
+                    {initialData?.state === 'listo' && opt.value === 'preparacion' ? ' (no permitido)' : ''}
+                  </option>
                 ))}
               </select>
+              {initialData?.state === 'listo' && (
+                <div className="text-xs text-gray-500 mt-1">
+                  No puedes volver a <span className="font-semibold">Preparación</span> desde <span className="font-semibold">Listo</span>.
+                </div>
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">Tiempo límite (segundos)</label>
