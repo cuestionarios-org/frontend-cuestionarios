@@ -6,6 +6,7 @@ import { es } from 'date-fns/locale'
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import ErrorMessage from '../components/ErrorMessage';
 
 export default function CompetitionsManager() {
   const [competitions, setCompetitions] = useState([])
@@ -20,6 +21,7 @@ export default function CompetitionsManager() {
   const [editQuizData, setEditQuizData] = useState({});
   const [savingQuiz, setSavingQuiz] = useState(false);
   const [quizErrors, setQuizErrors] = useState({});
+  const [quizEditError, setQuizEditError] = useState("");
 
   const fetchCompetitions = async () => {
     setLoading(true)
@@ -108,6 +110,7 @@ export default function CompetitionsManager() {
 
   const handleEditQuizRow = (quiz) => {
     setEditQuizRowId(quiz.id || quiz.quiz_id);
+    setQuizEditError(""); // Limpiar error al iniciar edición
     const initialData = {
       time_limit: quiz.time_limit || '',
       start_time: quiz.start_time ? quiz.start_time.slice(0,16) : '',
@@ -127,16 +130,33 @@ export default function CompetitionsManager() {
 
   const handleSaveQuizRow = async (quiz, compId) => {
     setSavingQuiz(true);
+    setQuizEditError("");
     try {
       await competitionService.updateCompetitionQuiz(quiz.id || quiz.quiz_id, {
         time_limit: Number(editQuizData.time_limit),
         start_time: editQuizData.start_time,
         end_time: editQuizData.end_time,
+        quiz_id: quiz.quiz_id
       });
       // Recarga el detalle de la competencia
       const res = await competitionService.getById(compId);
       setDetail(prev => ({ ...prev, [compId]: res.data }));
       setEditQuizRowId(null);
+    } catch (err) {
+      // Intenta obtener el mensaje del backend, incluso si la estructura es diferente
+      let backendMsg = "Error al actualizar el cuestionario.";
+      if (err?.response?.data) {
+        if (typeof err.response.data === 'string') {
+          backendMsg = err.response.data;
+        } else if (err.response.data.msg) {
+          backendMsg = err.response.data.msg;
+        } else if (err.response.data.error) {
+          backendMsg = err.response.data.error;
+        } else if (err.response.data.message) {
+          backendMsg = err.response.data.message;
+        }
+      }
+      setQuizEditError(backendMsg);
     } finally {
       setSavingQuiz(false);
     }
@@ -275,7 +295,7 @@ export default function CompetitionsManager() {
                                       {Array.isArray(detail[comp.id]?.quizzes) && detail[comp.id].quizzes.length > 0 ? (
                                         detail[comp.id].quizzes.map((qz, idx) => (
                                           <React.Fragment key={qz.id || qz.quiz_id || idx}>
-                                            <tr className="border-t border-gray-100 dark:border-gray-800">
+                                            <tr className={`border-t border-gray-100 dark:border-gray-800 ${editQuizRowId === (qz.id || qz.quiz_id) ? 'bg-blue-50 dark:bg-blue-900/40 border-blue-200 dark:border-blue-700' : ''}`}>
                                               <td className="px-2 py-1 text-gray-900 dark:text-gray-100 font-semibold">{qz.title}</td>
                                               <td className="px-2 py-1 text-gray-700 dark:text-gray-200">{qz.category_name || '-'}</td>
                                               <td className="px-2 py-1">
@@ -299,15 +319,22 @@ export default function CompetitionsManager() {
                                               <td className="px-2 py-1 text-gray-500 dark:text-gray-200">{qz.start_time ? formatDate(qz.start_time) : '-'}</td>
                                               <td className="px-2 py-1 text-gray-500 dark:text-gray-200">{qz.end_time ? formatDate(qz.end_time) : '-'}</td>
                                               <td className="px-2 py-1">
-                                                <button
-                                                  onClick={() => handleEditQuizRow(qz)}
-                                                  className="px-2 py-1 bg-blue-600 text-white rounded"
-                                                >Editar</button>
+                                                {editQuizRowId === (qz.id || qz.quiz_id) ? (
+                                                  <span className="px-2 py-1 text-xs font-semibold text-blue-700 dark:text-blue-300">Editando...</span>
+                                                ) : (
+                                                  <button
+                                                    onClick={() => handleEditQuizRow(qz)}
+                                                    className="px-2 py-1 bg-blue-600 text-white rounded"
+                                                  >Editar</button>
+                                                )}
                                               </td>
                                             </tr>
                                             {editQuizRowId === (qz.id || qz.quiz_id) && (
                                               <tr>
                                                 <td colSpan={9} className="bg-blue-50 dark:bg-blue-900/40 border-t border-blue-200 dark:border-blue-700 p-4 animate-fade-in">
+                                                  {quizEditError && (
+                                                    <ErrorMessage message={quizEditError} />
+                                                  )}
                                                   <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
                                                     <div className="flex flex-col gap-2 w-full max-w-xs">
                                                       <label className="text-xs mb-1 text-gray-700 dark:text-gray-200">Tiempo (segundos)</label>
@@ -351,7 +378,7 @@ export default function CompetitionsManager() {
                                                     </div>
                                                     <div className="flex gap-2 mt-2">
                                                       <button onClick={() => handleSaveQuizRow(qz, comp.id)} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow focus:outline-none focus:ring-2 focus:ring-green-400 dark:focus:ring-green-700 transition" disabled={savingQuiz || Object.keys(quizErrors).length > 0}>Guardar</button>
-                                                      <button onClick={() => setEditQuizRowId(null)} className="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded shadow focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 transition" disabled={savingQuiz}>Cancelar</button>
+                                                      <button onClick={() => { setEditQuizRowId(null); setQuizEditError(""); }} className="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded shadow focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 transition" disabled={savingQuiz}>Cancelar</button>
                                                     </div>
                                                   </div>
                                                 </td>
